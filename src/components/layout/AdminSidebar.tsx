@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { logout } from '@/actions/auth';
+import { useTransition } from 'react';
 
 const navItems = [
   { href: '/admin', label: '仪表盘', icon: '📊' },
@@ -13,6 +14,13 @@ const navItems = [
 
 export default function AdminSidebar({ username }: { username: string }) {
   const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
+
+  function handleLogout() {
+    startTransition(() => {
+      logout();
+    });
+  }
 
   return (
     <aside className="fixed left-0 top-0 w-64 h-full bg-gray-900 text-white flex flex-col z-40">
@@ -41,14 +49,24 @@ export default function AdminSidebar({ username }: { username: string }) {
             </Link>
           );
         })}
+
+        <hr className="my-2 border-gray-800" />
+        <Link
+          href="/"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition"
+        >
+          <span>🏪</span>
+          <span>返回商城</span>
+        </Link>
       </nav>
 
       <div className="px-4 py-4 border-t border-gray-800">
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-400">{username}</span>
           <button
-            onClick={() => logout()}
-            className="text-xs text-gray-500 hover:text-white transition cursor-pointer"
+            onClick={handleLogout}
+            disabled={isPending}
+            className="text-xs text-gray-500 hover:text-white transition cursor-pointer disabled:opacity-50"
           >
             退出
           </button>

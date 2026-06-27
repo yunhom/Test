@@ -1,6 +1,7 @@
 import { requireAdmin } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import AdminHeader from '@/components/layout/AdminHeader';
+import Pagination from '@/components/ui/Pagination';
 import Link from 'next/link';
 import OrderStatusBadge from '@/components/shop/OrderStatusBadge';
 import type { Metadata } from 'next';
@@ -12,21 +13,30 @@ export const metadata: Metadata = {
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; page?: string }>;
 }) {
   await requireAdmin();
   const params = await searchParams;
+  const page = Math.max(1, Number(params.page) || 1);
+  const pageSize = 10;
 
   const where = params.status ? { status: params.status } : {};
 
-  const orders = await prisma.order.findMany({
-    where,
-    include: {
-      user: { select: { username: true, email: true } },
-      items: true,
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+  const [orders, total] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      include: {
+        user: { select: { username: true, email: true } },
+        items: true,
+      },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.order.count({ where }),
+  ]);
+
+  const totalPages = Math.ceil(total / pageSize);
 
   const statusCounts = await prisma.order.groupBy({
     by: ['status'],
@@ -113,6 +123,18 @@ export default async function AdminOrdersPage({
           </table>
         </div>
       )}
+
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        buildHref={(p: number) => {
+          const sp = new URLSearchParams();
+          if (params.status) sp.set('status', params.status);
+          if (p > 1) sp.set('page', String(p));
+          const q = sp.toString();
+          return q ? `/admin/orders?${q}` : '/admin/orders';
+        }}
+      />
     </div>
   );
 }

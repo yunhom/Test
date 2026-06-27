@@ -1,6 +1,7 @@
 import { requireAuth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import OrderCard from '@/components/shop/OrderCard';
+import Pagination from '@/components/ui/Pagination';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
@@ -8,14 +9,29 @@ export const metadata: Metadata = {
   title: '我的订单',
 };
 
-export default async function OrdersPage() {
-  const user = await requireAuth();
+const PAGE_SIZE = 10;
 
-  const orders = await prisma.order.findMany({
-    where: { userId: user.id },
-    include: { items: true },
-    orderBy: { createdAt: 'desc' },
-  });
+export default async function OrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const user = await requireAuth();
+  const params = await searchParams;
+  const page = Math.max(1, Number(params.page) || 1);
+
+  const [orders, total] = await Promise.all([
+    prisma.order.findMany({
+      where: { userId: user.id },
+      include: { items: true },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.order.count({ where: { userId: user.id } }),
+  ]);
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
@@ -33,11 +49,24 @@ export default async function OrdersPage() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <OrderCard key={order.id} order={order} />
-          ))}
-        </div>
+        <>
+          <p className="text-sm text-gray-400 mb-4">共 {total} 个订单</p>
+          <div className="space-y-4">
+            {orders.map((order) => (
+              <OrderCard key={order.id} order={order} />
+            ))}
+          </div>
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            buildHref={(p: number) => {
+              const sp = new URLSearchParams();
+              if (p > 1) sp.set('page', String(p));
+              const q = sp.toString();
+              return q ? `/orders?${q}` : '/orders';
+            }}
+          />
+        </>
       )}
     </div>
   );

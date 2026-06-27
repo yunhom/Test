@@ -69,3 +69,17 @@ export async function destroySession(): Promise<void> {
   }
   await clearSessionCookie();
 }
+
+// ---------- 规范别名 ----------
+
+export async function setSession(userId: number, _role?: string): Promise<string> {
+  return createSession(userId);
+}
+
+export async function getSession(): Promise<User | null> {
+  return validateSession();
+}
+
+export async function clearSession(): Promise<void> {
+  return destroySession();
+}

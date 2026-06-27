@@ -2,6 +2,7 @@ import { requireAdmin } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import AdminHeader from '@/components/layout/AdminHeader';
 import ProductTable from '@/components/admin/ProductTable';
+import Pagination from '@/components/ui/Pagination';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
@@ -34,6 +35,8 @@ export default async function AdminProductsPage({
     prisma.product.count({ where }),
   ]);
 
+  const totalPages = Math.ceil(total / pageSize);
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -65,8 +68,19 @@ export default async function AdminProductsPage({
         <>
           <ProductTable products={products} />
           <div className="mt-4 text-sm text-gray-400 text-center">
-            共 {total} 件商品，第 {page}/{Math.ceil(total / pageSize)} 页
+            共 {total} 件商品
           </div>
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            buildHref={(p: number) => {
+              const sp = new URLSearchParams();
+              if (params.search) sp.set('search', params.search);
+              if (p > 1) sp.set('page', String(p));
+              const q = sp.toString();
+              return q ? `/admin/products?${q}` : '/admin/products';
+            }}
+          />
         </>
       )}
     </div>

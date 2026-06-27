@@ -4,13 +4,21 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { logout } from '@/actions/auth';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useTransition } from 'react';
 
 export default function Navbar() {
   const { user, loading } = useAuth();
   const { itemCount } = useCart();
   const [showMenu, setShowMenu] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const menuRef = useRef<HTMLDivElement>(null);
+
+  function handleLogout() {
+    setShowMenu(false);
+    startTransition(() => {
+      logout();
+    });
+  }
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -73,9 +81,20 @@ export default function Navbar() {
                   >
                     我的订单
                   </Link>
+                  {user.role === 'admin' && (
+                    <Link
+                      href="/admin"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      onClick={() => setShowMenu(false)}
+                    >
+                      后台管理
+                    </Link>
+                  )}
+                  <hr className="my-1 border-gray-100" />
                   <button
-                    onClick={() => { setShowMenu(false); logout(); }}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                    onClick={handleLogout}
+                    disabled={isPending}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer disabled:opacity-50"
                   >
                     退出登录
                   </button>

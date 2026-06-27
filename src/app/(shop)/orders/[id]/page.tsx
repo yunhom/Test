@@ -137,7 +137,7 @@ export default async function OrderDetailPage({
       <div className="flex gap-4">
         {order.status === 'pending' && (
           <>
-            <PayButton orderId={order.id} />
+            <PayButton orderId={order.id} amount={order.totalAmount} />
             <CancelButton orderId={order.id} />
           </>
         )}

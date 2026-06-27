@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { prisma } from '@/lib/prisma';
 import ProductGrid from '@/components/shop/ProductGrid';
 import CategoryFilter from '@/components/shop/CategoryFilter';
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   title: '全部商品',
 };
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 9;
 
 export default async function ProductsPage({
   searchParams,
@@ -46,9 +47,13 @@ export default async function ProductsPage({
 
       <div className="space-y-4 mb-6">
         <div className="max-w-md">
-          <ProductSearch />
+          <Suspense fallback={<div className="h-10 bg-gray-100 rounded-lg animate-pulse" />}>
+            <ProductSearch />
+          </Suspense>
         </div>
-        <CategoryFilter categories={categories} />
+        <Suspense fallback={<div className="h-10 bg-gray-100 rounded-lg animate-pulse" />}>
+          <CategoryFilter categories={categories} />
+        </Suspense>
       </div>
 
       {products.length === 0 ? (
@@ -61,7 +66,18 @@ export default async function ProductsPage({
         <>
           <p className="text-sm text-gray-400 mb-4">共 {total} 件商品</p>
           <ProductGrid products={products} />
-          <Pagination currentPage={page} totalPages={totalPages} />
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            buildHref={(p: number) => {
+              const sp = new URLSearchParams();
+              if (search) sp.set('search', search);
+              if (categoryId) sp.set('category', String(categoryId));
+              if (p > 1) sp.set('page', String(p));
+              const q = sp.toString();
+              return q ? `/products?${q}` : '/products';
+            }}
+          />
         </>
       )}
     </div>

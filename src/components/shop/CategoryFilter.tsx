@@ -1,11 +1,12 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import type { Category } from '@prisma/client';
 
 export default function CategoryFilter({ categories }: { categories: Category[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const currentCategory = searchParams.get('category');
 
   function handleSelect(categoryId: string | null) {
@@ -16,7 +17,8 @@ export default function CategoryFilter({ categories }: { categories: Category[] 
       params.delete('category');
     }
     params.delete('page');
-    router.push(`/products?${params.toString()}`);
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname);
   }
 
   return (

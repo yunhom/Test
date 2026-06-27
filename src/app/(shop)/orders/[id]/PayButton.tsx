@@ -1,36 +1,32 @@
 'use client';
 
 import { useState } from 'react';
-import { payOrder } from '@/actions/order';
-import { useRouter } from 'next/navigation';
+import WechatPayModal from '@/components/shop/WechatPayModal';
 
-export default function PayButton({ orderId }: { orderId: number }) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const router = useRouter();
+export default function PayButton({ orderId, amount }: { orderId: number; amount: number }) {
+  const [showModal, setShowModal] = useState(false);
 
-  async function handlePay() {
-    setLoading(true);
-    setError('');
-    const result = await payOrder(orderId);
-    if (result?.error) {
-      setError(result.error);
-    } else {
-      router.refresh();
-    }
-    setLoading(false);
-  }
+  const payInfo = {
+    payNo: `WX${orderId}`,
+    amount,
+    orderId,
+  };
 
   return (
-    <div>
+    <>
       <button
-        onClick={handlePay}
-        disabled={loading}
-        className="px-6 py-2.5 bg-success text-white rounded-xl font-medium hover:bg-green-600 disabled:opacity-50 transition cursor-pointer"
+        onClick={() => setShowModal(true)}
+        className="px-6 py-2.5 bg-[#07C160] text-white rounded-xl font-medium hover:bg-[#06AD56] transition cursor-pointer"
       >
-        {loading ? '处理中...' : '确认支付'}
+        微信支付
       </button>
-      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
-    </div>
+
+      {showModal && (
+        <WechatPayModal
+          payInfo={payInfo}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+    </>
   );
 }

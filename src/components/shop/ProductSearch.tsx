@@ -1,11 +1,12 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
 export default function ProductSearch() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [value, setValue] = useState(searchParams.get('search') || '');
 
   useEffect(() => {
@@ -21,7 +22,8 @@ export default function ProductSearch() {
       params.delete('search');
     }
     params.delete('page');
-    router.push(`/products?${params.toString()}`);
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname);
   }
 
   return (
