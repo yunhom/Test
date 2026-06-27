@@ -1,7 +1,6 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
-import { redirect } from 'next/navigation';
 import { useState } from 'react';
 import { login } from '@/actions/auth';
 import Link from 'next/link';
@@ -9,16 +8,22 @@ import Link from 'next/link';
 export default function LoginPage() {
   const { user, loading } = useAuth();
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   if (!loading && user) {
-    redirect('/');
+    window.location.href = '/';
+    return null;
   }
 
   async function handleSubmit(formData: FormData) {
     setError('');
+    setSubmitting(true);
     const result = await login(formData);
     if (result?.error) {
       setError(result.error);
+      setSubmitting(false);
+    } else {
+      window.location.href = '/';
     }
   }
 
@@ -64,9 +69,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="w-full py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition cursor-pointer"
+            disabled={submitting}
+            className="w-full py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition cursor-pointer disabled:opacity-50"
           >
-            登录
+            {submitting ? '登录中...' : '登录'}
           </button>
         </form>
 

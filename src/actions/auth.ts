@@ -34,7 +34,6 @@ export async function register(formData: FormData) {
 
   await createSession(user.id);
   revalidatePath('/', 'layout');
-  redirect('/');
 }
 
 export async function login(formData: FormData) {
@@ -62,16 +61,10 @@ export async function login(formData: FormData) {
 
   await createSession(user.id);
   revalidatePath('/', 'layout');
-
-  if (user.role === 'admin') {
-    redirect('/admin');
-  }
-  redirect('/');
 }
 
 export async function logout() {
   await destroySession();
-  redirect('/');
 }
 
 export async function getCurrentUser() {

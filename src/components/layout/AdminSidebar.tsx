@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { logout } from '@/actions/auth';
-import { useTransition } from 'react';
+import { useState, useCallback } from 'react';
 
 const navItems = [
   { href: '/admin', label: '仪表盘', icon: '📊' },
@@ -14,13 +14,16 @@ const navItems = [
 
 export default function AdminSidebar({ username }: { username: string }) {
   const pathname = usePathname();
-  const [isPending, startTransition] = useTransition();
+  const [loggingOut, setLoggingOut] = useState(false);
 
-  function handleLogout() {
-    startTransition(() => {
-      logout();
-    });
-  }
+  const handleLogout = useCallback(async () => {
+    setLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      window.location.href = '/';
+    }
+  }, []);
 
   return (
     <aside className="fixed left-0 top-0 w-64 h-full bg-gray-900 text-white flex flex-col z-40">
@@ -65,10 +68,10 @@ export default function AdminSidebar({ username }: { username: string }) {
           <span className="text-sm text-gray-400">{username}</span>
           <button
             onClick={handleLogout}
-            disabled={isPending}
+            disabled={loggingOut}
             className="text-xs text-gray-500 hover:text-white transition cursor-pointer disabled:opacity-50"
           >
-            退出
+            {loggingOut ? '退出中...' : '退出'}
           </button>
         </div>
       </div>

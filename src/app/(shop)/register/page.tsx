@@ -1,7 +1,6 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
-import { redirect } from 'next/navigation';
 import { useState } from 'react';
 import { register } from '@/actions/auth';
 import Link from 'next/link';
@@ -9,16 +8,22 @@ import Link from 'next/link';
 export default function RegisterPage() {
   const { user, loading } = useAuth();
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   if (!loading && user) {
-    redirect('/');
+    window.location.href = '/';
+    return null;
   }
 
   async function handleSubmit(formData: FormData) {
     setError('');
+    setSubmitting(true);
     const result = await register(formData);
     if (result?.error) {
       setError(result.error);
+      setSubmitting(false);
+    } else {
+      window.location.href = '/';
     }
   }
 
@@ -78,9 +83,10 @@ export default function RegisterPage() {
 
           <button
             type="submit"
-            className="w-full py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition cursor-pointer"
+            disabled={submitting}
+            className="w-full py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition cursor-pointer disabled:opacity-50"
           >
-            注册
+            {submitting ? '注册中...' : '注册'}
           </button>
         </form>
 

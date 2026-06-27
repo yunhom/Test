@@ -4,21 +4,24 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { logout } from '@/actions/auth';
-import { useState, useRef, useEffect, useTransition } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
 export default function Navbar() {
   const { user, loading } = useAuth();
   const { itemCount } = useCart();
   const [showMenu, setShowMenu] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [loggingOut, setLoggingOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  function handleLogout() {
+  const handleLogout = useCallback(async () => {
     setShowMenu(false);
-    startTransition(() => {
-      logout();
-    });
-  }
+    setLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      window.location.href = '/';
+    }
+  }, []);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -93,10 +96,10 @@ export default function Navbar() {
                   <hr className="my-1 border-gray-100" />
                   <button
                     onClick={handleLogout}
-                    disabled={isPending}
+                    disabled={loggingOut}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer disabled:opacity-50"
                   >
-                    退出登录
+                    {loggingOut ? '退出中...' : '退出登录'}
                   </button>
                 </div>
               )}
